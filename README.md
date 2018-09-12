@@ -14,7 +14,7 @@ MONGODB_PORT=dbport
 ```
 
 # Todo
-Implement current code in firebasegains repo to interact correctly with
+Implement current code in firebasegains repo to interact correctly with MongoDB
 
 # References
 

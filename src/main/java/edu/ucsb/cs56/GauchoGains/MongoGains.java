@@ -13,6 +13,7 @@ package edu.ucsb.cs56.GauchoGains;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import static spark.Spark.port;
 
@@ -39,6 +40,11 @@ import java.util.List;
 
 import edu.ucsb.cs56.GauchoGains.User;
 
+import static spark.Spark.get;
+import static spark.Spark.post;
+import spark.ModelAndView;
+import spark.template.mustache.MustacheTemplateEngine;
+
 /**
  * Hello world!
  *
@@ -46,18 +52,14 @@ import edu.ucsb.cs56.GauchoGains.User;
 
 public class MongoGains {
 
-  /**
-       return a HashMap with values of all the environment variables
-       listed; print error message for each missing one, and exit if any
-       of them is not defined.
-    */
-    
-    public static HashMap<String,String> getNeededEnvVars(String [] neededEnvVars) {
-
-        ProcessBuilder processBuilder = new ProcessBuilder();
-    		
+	/**
+	  return a HashMap with values of all the environment variables
+	  listed; print error message for each missing one, and exit if any
+	  of them is not defined.
+	  */
+	public static HashMap<String,String> getNeededEnvVars(String [] neededEnvVars) {
+		ProcessBuilder processBuilder = new ProcessBuilder();
 		HashMap<String,String> envVars = new HashMap<String,String>();
-		
 		boolean error=false;		
 		for (String k:neededEnvVars) {
 			String v = processBuilder.environment().get(k);
@@ -67,18 +69,15 @@ public class MongoGains {
 				error = true;
 				System.err.println("Error: Must define env variable " + k);
 			}
-        }
-		
+		}
 		if (error) { System.exit(1); }
-
 		System.out.println("envVars=" + envVars);
 		return envVars;	 
-    }
-	
+	}
 	public static String mongoDBUri(HashMap<String,String> envVars) {
 
 		System.out.println("envVars=" + envVars);
-		
+
 		// mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database][?options]]
 		String uriString = "mongodb://" +
 			envVars.get("MONGODB_USER") + ":" +
@@ -89,136 +88,85 @@ public class MongoGains {
 		System.out.println("uriString=" + uriString);
 		return uriString;
 	}
-	
-    public static void main(String[] args) {
-	
-		HashMap<String,String> envVars =  
-			getNeededEnvVars(new String []{
-					"MONGODB_USER",
-					"MONGODB_PASS",
-					"MONGODB_NAME",
-					"MONGODB_HOST",
-					"MONGODB_PORT"				
-				});
-		
-		String uriString = mongoDBUri(envVars);
-			
-        ArrayList<String> dbText = initDatabase(uriString);
-        final String displayText = makeString(dbText);
-        port(getHerokuAssignedPort());
-		spark.Spark.get("/", (req, res) -> displayText);
-		System.out.println("Spark is listening for connections...");
+
+	public static void main(String[] args) {
+		String uriString = initMongoDB();
+		port(getHerokuAssignedPort());
+
+		Map map = new HashMap();
+		get("/", (rq, rs) -> new ModelAndView(map, "signupform.mustache"), new MustacheTemplateEngine());
+		post("/check", (rq,rs) -> signUp(rq, uriString));
+
 	}
-	
-    static int getHerokuAssignedPort() {
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        if (processBuilder.environment().get("PORT") != null) {
-            return Integer.parseInt(processBuilder.environment().get("PORT"));
-        }
-        return 4567; //return default port if heroku-port isn't set (i.e. on localhost)
-    }
 
-    static ArrayList<String> initDatabase(String uriString) {
-        ArrayList<String> dbQuery = new ArrayList<>();
-        try {
-            dbQuery = createDocument(uriString);
-        } catch (UnknownHostException e) {
-            System.out.println("Unknown Host thrown");
-        }
-        return dbQuery;
-    }
+	public static String signUp(spark.Request rq, String uriString) {
+		MongoClientURI uri = new MongoClientURI(uriString);
+                MongoClient client = new MongoClient(uri);
+                MongoDatabase db = client.getDatabase(uri.getDatabase());
+                MongoCollection<Document> users = db.getCollection("users");
 
-    static String makeString(ArrayList<String> text) {
-        String resultString = "";
-        for (String s: text) {
-            resultString += "<b> " + s + "</b><br/>";
-        }
-        return resultString;
-    }
+		String email = rq.queryParams("email").toLowerCase();
+		String firstName = rq.queryParams("firstname");
+		String lastName = rq.queryParams("lastname");
+		String password = rq.queryParams("password");
+		
+		String checkValid = checkValidUser(email, firstName, lastName, password, uriString);
+		if (checkValid.equals("valid")) {
+			Document newUser = new Document("_id", email)
+				.append("firstName", firstName)
+				.append("lastName", lastName)
+				.append("password", password);
+			users.insertOne(newUser);
+		} else {
+			return checkValid;
+		}	
+		return "Sign Up Success";
+	}
+	static String checkValidUser(String email, String firstName, String lastName, String password, String uriString) {
+		MongoClientURI uri = new MongoClientURI(uriString);
+		MongoClient client = new MongoClient(uri);
+		MongoDatabase db = client.getDatabase(uri.getDatabase());
+		MongoCollection<Document> users = db.getCollection("users");
 
-    public static ArrayList<String> createDocument(String uriString) throws UnknownHostException {
-		
-        // Create seed data
-        
-        List<Document> seedData = new ArrayList<Document>();
-		
-        seedData.add(new Document("decade", "1970s")
-					 .append("artist", "Debby Boone")
-					 .append("song", "You Light Up My Life")
-					 .append("weeksAtOne", 10)
-					 );
-		
-        seedData.add(new Document("decade", "1980s")
-					 .append("artist", "Olivia Newton-John")
-					 .append("song", "Physical")
-					 .append("weeksAtOne", 10)
-					 );
-		
-        seedData.add(new Document("decade", "1990s")
-					 .append("artist", "Mariah Carey")
-					 .append("song", "One Sweet Day")
-					 .append("weeksAtOne", 16)
-					 );
-		
-        MongoClientURI uri  = new MongoClientURI(uriString); 
-        MongoClient client = new MongoClient(uri);
-        MongoDatabase db = client.getDatabase(uri.getDatabase());
-        
-        /*
-         * First we'll add a few songs. Nothing is required to create the
-         * songs collection; it is created automatically when we insert.
-         */
-        
-        MongoCollection<Document> songs = db.getCollection("songs");
-        
-        /*
-         *  Dropping the table right before the new setup. 
-         *  This way you can see the changes on mLab, wihtout duplicates.
-         */
-		
-        songs.drop();
-		
-        // Note that the insert method can take either an array or a document.
-        
-        songs.insertMany(seedData);
-		
-        /*
-         * Then we need to give Boyz II Men credit for their contribution to
-         * the hit "One Sweet Day".
-         */
-		
-        Document updateQuery = new Document("song", "One Sweet Day");
-        songs.updateOne(updateQuery, new Document("$set", new Document("artist", "Mariah Carey ft. Boyz II Men")));
-        
-        /*
-         * Finally we run a query which returns all the hits that spent 10 
-         * or more weeks at number 1.
-         */
-		
-        Document findQuery = new Document("weeksAtOne", new Document("$gte",10));
-        Document orderBy = new Document("decade", 1);
-		
-        MongoCursor<Document> cursor = songs.find(findQuery).sort(orderBy).iterator();
-        
-        ArrayList<String> prettyQuery = new ArrayList<>();
-        
-        try {
-            while (cursor.hasNext()) {
-                Document doc = cursor.next();
-                String currSong = "In the " + doc.get("decade") + ", " + doc.get("song") + 
-                    " by " + doc.get("artist") + " topped the charts for " + 
-                    doc.get("weeksAtOne") + " straight weeks.";
-                prettyQuery.add(currSong);
-            }
-        } finally {
-            cursor.close();
-        }
-        
-        // Only close the connection when your app is terminating
-        
-        client.close();
-		
-        return prettyQuery;
-    }
+		if(email.length() == 0 || firstName.length() == 0 || lastName.length() == 0 || password.length() == 0)
+			return "Please fill in all forms";
+		if(!email.contains("@") || email.length() < 5 || email.charAt(email.length()-4) != '.' ||
+				email.charAt(email.indexOf("@")+1) == '.')
+			return "Invalid Email";
+		if(password.length() < 6)
+			return "Please enter a password with length greater than 6";
+		Document findQuery = new Document("_id", email);
+		if(users.count(findQuery) > 0)
+			return "Email is already in use";
+
+		return "valid";
+	}
+
+	static String initMongoDB() {
+		HashMap<String, String> envVars = getNeededEnvVars(new String []{
+			"MONGODB_USER",
+				"MONGODB_PASS",
+				"MONGODB_NAME",
+				"MONGODB_HOST",
+				"MONGODB_PORT"
+		});
+		return mongoDBUri(envVars);
+	}
+
+	static int getHerokuAssignedPort() {
+		ProcessBuilder processBuilder = new ProcessBuilder();
+		if (processBuilder.environment().get("PORT") != null) {
+			return Integer.parseInt(processBuilder.environment().get("PORT"));
+		}
+		return 4567; //return default port if heroku-port isn't set (i.e. on localhost)
+	}
+
+	static String makeString(ArrayList<String> text) {
+		String resultString = "";
+		for (String s: text) {
+			resultString += "<b> " + s + "</b><br/>";
+		}
+		return resultString;
+	}
 
 }

@@ -52,7 +52,7 @@ public class User {
 		else 
 			this.valid = "valid";
 	}
-	
+
 	public String getValidUserCheck() {
 		return this.valid;
 	}

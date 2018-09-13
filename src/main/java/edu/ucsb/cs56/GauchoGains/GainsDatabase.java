@@ -1,6 +1,7 @@
 package edu.ucsb.cs56.GauchoGains;
 
 /*
+ * Maga Kim and Howard Lin for GauchoGains Web App UCSB CS 56 Summer 2018
  * Some portions:
  * Copyright (c) 2017 ObjectLabs Corporation
  * Distributed under the MIT license - http://opensource.org/licenses/MIT
@@ -79,13 +80,13 @@ public class GainsDatabase {
 
 	public String logIn(spark.Request rq) {
 		MongoClientURI uri = new MongoClientURI(this.uriString);
-                MongoClient client = new MongoClient(uri);
-                MongoDatabase db = client.getDatabase(uri.getDatabase());
-                MongoCollection<Document> users = db.getCollection("users");
-		
+		MongoClient client = new MongoClient(uri);
+		MongoDatabase db = client.getDatabase(uri.getDatabase());
+		MongoCollection<Document> users = db.getCollection("users");
+
 		Document findUser = new Document("_id", rq.queryParams("emailin"))
 			.append("password", rq.queryParams("passwordin"));
-                if (users.count(findUser) > 0)
+		if (users.count(findUser) > 0)
 			return "Login Success";
 		else
 			return "Login Failure";
@@ -94,15 +95,15 @@ public class GainsDatabase {
 
 	public String signUp(spark.Request rq) {
 		MongoClientURI uri = new MongoClientURI(this.uriString);
-                MongoClient client = new MongoClient(uri);
-                MongoDatabase db = client.getDatabase(uri.getDatabase());
-                MongoCollection<Document> users = db.getCollection("users");
+		MongoClient client = new MongoClient(uri);
+		MongoDatabase db = client.getDatabase(uri.getDatabase());
+		MongoCollection<Document> users = db.getCollection("users");
 
 		String email = rq.queryParams("email").toLowerCase();
 		String firstName = rq.queryParams("firstname");
 		String lastName = rq.queryParams("lastname");
 		String password = rq.queryParams("password");
-		
+
 		User checkUser = new User(email, firstName, lastName, password);
 		String checkValidUser = checkUser.getValidUserCheck();
 		if (checkValidUser.equals("valid"))
@@ -124,7 +125,7 @@ public class GainsDatabase {
 		MongoClient client = new MongoClient(uri);
 		MongoDatabase db = client.getDatabase(uri.getDatabase());
 		MongoCollection<Document> users = db.getCollection("users");
-		
+
 		Document findQuery = new Document("_id", email);
 		if(users.count(findQuery) > 0)
 			return "Email is already in use";

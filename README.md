@@ -14,9 +14,9 @@ MONGODB_PORT=dbport
 ```
 
 # Done
-Implemented code from firebasegains repo to interact correctly with MongoDB
-Wrote to MongoDB on sign up and read on log in
-Hashed passwords via PBKDF2 SHA1
+* Implemented code from firebasegains repo to interact correctly with MongoDB.
+* Wrote to MongoDB on sign up and read on log in.
+* Hashed passwords via PBKDF2 SHA1.
 
 # References
 

@@ -38,7 +38,7 @@ import static com.mongodb.client.model.Updates.*;
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 
-import edu.ucsb.cs56.GauchoGains.User;
+import edu.ucsb.cs56.GauchoGains.GainsUser;
 
 public class GainsDatabase {
 	private String uriString;
@@ -88,12 +88,11 @@ public class GainsDatabase {
 		MongoDatabase db = client.getDatabase(uri.getDatabase());
 		MongoCollection<Document> users = db.getCollection("users");
 
-		Document findUser = new Document("_id", rq.queryParams("emailin"))
-			.append("password", rq.queryParams("passwordin"));
-		if (users.count(findUser) > 0)
-			return "Login Success";
-		else
-			return "Login Failure";
+		Document findUser = new Document("_id", rq.queryParams("emailin"));
+		if (users.count(findUser) == 0)
+			return "No user with that email";
+		Document cur = users.find(findUser).first();
+		return GainsPassword.checkPassword(rq.queryParams("passwordin"), cur.get("salt").toString(), cur.get("hash").toString()) ? "Login Success" : "Wrong Password";
 	}
 
 	public String signUp(spark.Request rq) {
@@ -107,7 +106,7 @@ public class GainsDatabase {
 		String lastName = rq.queryParams("lastname");
 		String password = rq.queryParams("password");
 
-		User checkUser = new User(email, firstName, lastName, password);
+		GainsUser checkUser = new GainsUser(email, firstName, lastName, password);
 		String checkValidUser = checkUser.getValidUserCheck();
 		if (checkValidUser.equals("valid"))
 			checkValidUser = checkDupeUser(checkUser.getEmail());//, uriString);
@@ -115,7 +114,8 @@ public class GainsDatabase {
 			Document newUser = new Document("_id", checkUser.getEmail())
 				.append("firstName", checkUser.getFirstName())
 				.append("lastName", checkUser.getLastName())
-				.append("password", checkUser.getPassword());
+				.append("salt", checkUser.getPasswordSalt())
+				.append("hash", checkUser.getPasswordHash());
 			users.insertOne(newUser);
 		} else {
 			return checkValidUser;

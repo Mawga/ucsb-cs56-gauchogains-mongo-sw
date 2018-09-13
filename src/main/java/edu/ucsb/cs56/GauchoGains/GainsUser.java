@@ -6,20 +6,22 @@
  */
 package edu.ucsb.cs56.GauchoGains;
 
-public class User {
+import edu.ucsb.cs56.GauchoGains.GainsPassword;
+
+public class GainsUser {
 	private String valid;
 	private String email;
 	private String firstName;
 	private String lastName;
-	private String password;
+	private GainsPassword password;
 
-	public User (String email, String firstName, String lastName,
+	public GainsUser (String email, String firstName, String lastName,
 			String password) {
+		checkValidUser(email, firstName, lastName, password);
 		this.email = email;
 		this.firstName = firstName;
 		this.lastName = lastName;
-		this.password = password;
-		checkValidUser();
+		this.password = new GainsPassword(password);
 	}
 
 	/*
@@ -31,9 +33,13 @@ public class User {
 	public String getLastName() {
 		return this.lastName;
 	}
-	public String getPassword() {
-		return this.password;
+	public String getPasswordSalt() {
+		return this.password.getSaltString();
 	}
+	public String getPasswordHash() {
+		return this.password.getHashString();
+	}
+
 	public String getEmail() {
 		return this.email;
 	}
@@ -47,21 +53,17 @@ public class User {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
 	/*
 	 * Define valid user parameters here
 	 */
 
-	private void checkValidUser() {
-		if(this.email.length() == 0 || this.firstName.length() == 0 || this.lastName.length() == 0 || this.password.length() == 0)
+	private void checkValidUser(String email, String firstName, String lastName, String password) {
+		if(email.length() == 0 || firstName.length() == 0 || lastName.length() == 0 || password.length() == 0)
 			this.valid = "Please fill in all forms";
-		else if(!this.email.contains("@") || this.email.length() < 5 || this.email.charAt(email.length()-4) != '.' ||
-				this.email.charAt(email.indexOf("@")+1) == '.')
+		else if(!email.contains("@") || email.length() < 5 || email.charAt(email.length()-4) != '.' ||
+				email.charAt(email.indexOf("@")+1) == '.')
 			this.valid = "Invalid Email";
-		else if(this.password.length() < 6)
+		else if(password.length() < 6)
 			this.valid = "Please enter a password with length greater than 6";
 		else 
 			this.valid = "valid";

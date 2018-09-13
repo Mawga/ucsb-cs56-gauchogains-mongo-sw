@@ -13,8 +13,10 @@ MONGODB_HOST=dbhosturl
 MONGODB_PORT=dbport
 ```
 
-# Todo
-Implement current code in firebasegains repo to interact correctly with MongoDB
+# Done
+Implemented code from firebasegains repo to interact correctly with MongoDB
+Wrote to MongoDB on sign up and read on log in
+Hashed passwords via PBKDF2 SHA1
 
 # References
 

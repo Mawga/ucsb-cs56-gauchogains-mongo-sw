@@ -1,7 +1,11 @@
 package edu.ucsb.cs56.GauchoGains;
 
 /*
- * Maga Kim and Howard Lin for GauchoGains Web App UCSB CS 56 Summer 2018
+ * Maga Kim and Howard Lin
+ * GauchoGains Web App 
+ * MongoDB Implementation
+ * UCSB CS56 Summer 2018
+ * 
  * Some portions:
  * Copyright (c) 2017 ObjectLabs Corporation
  * Distributed under the MIT license - http://opensource.org/licenses/MIT
@@ -90,7 +94,6 @@ public class GainsDatabase {
 			return "Login Success";
 		else
 			return "Login Failure";
-
 	}
 
 	public String signUp(spark.Request rq) {
@@ -120,6 +123,7 @@ public class GainsDatabase {
 		return "Sign Up Success";
 	}
 
+	//Check if email already exists in database
 	public String checkDupeUser(String email) {
 		MongoClientURI uri = new MongoClientURI(this.uriString);
 		MongoClient client = new MongoClient(uri);
@@ -132,7 +136,8 @@ public class GainsDatabase {
 
 		return "valid";
 	}
-
+	
+	//Get MongoDB uri from .env vars
 	private static String initMongoDB() {
 		HashMap<String, String> envVars = getNeededEnvVars(new String []{
 			"MONGODB_USER",

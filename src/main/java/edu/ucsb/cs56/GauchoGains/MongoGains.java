@@ -1,3 +1,9 @@
+/*
+ * Maga Kim and Howard Lin
+ * GauchoGains Web App
+ * MongoDB Implementation
+ * UCSB CS56 Summer 2018 
+ */  
 package edu.ucsb.cs56.GauchoGains;
 
 import edu.ucsb.cs56.GauchoGains.GainsDatabase;
@@ -14,12 +20,19 @@ import spark.template.mustache.MustacheTemplateEngine;
 public class MongoGains {
 
 	public static void main(String[] args) {
+		//Instantiate database which contains MongoDB uri
 		GainsDatabase db = new GainsDatabase();
+
+		//Link to Heroku port
 		port(getHerokuAssignedPort());
 
 		Map map = new HashMap();
 		get("/", (rq, rs) -> new ModelAndView(map, "signupform.mustache"), new MustacheTemplateEngine());
+		
+		//On Sign Up button click take form fields to sign up through database
 		post("/signup", (rq,rs) -> db.signUp(rq));
+
+		//On Log In button click take form fields to login through database
 		post("/login", (rq,rs) -> db.logIn(rq));
 
 	}

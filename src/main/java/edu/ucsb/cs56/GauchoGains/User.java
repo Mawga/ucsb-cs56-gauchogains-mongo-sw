@@ -1,3 +1,9 @@
+/*
+ * Maga Kim and Howard Lin
+ * GauchoGains Web App
+ * MongoDB Implementation
+ * UCSB CS56 Summer 2018
+ */
 package edu.ucsb.cs56.GauchoGains;
 
 public class User {
@@ -15,6 +21,10 @@ public class User {
 		this.password = password;
 		checkValidUser();
 	}
+
+	/*
+	 * Getters and Setters
+	 */
 	public String getFirstName() {
 		return this.firstName;
 	}
@@ -41,6 +51,10 @@ public class User {
 		this.password = password;
 	}
 
+	/*
+	 * Define valid user parameters here
+	 */
+
 	private void checkValidUser() {
 		if(this.email.length() == 0 || this.firstName.length() == 0 || this.lastName.length() == 0 || this.password.length() == 0)
 			this.valid = "Please fill in all forms";
@@ -52,11 +66,13 @@ public class User {
 		else 
 			this.valid = "valid";
 	}
-
+	
+	//Getter to check for valid user
 	public String getValidUserCheck() {
 		return this.valid;
 	}
-
+	
+	//Not currently in use
 	@Override
 	public String toString() {
 		return this.email + " " + this.firstName + " " + this.lastName;

@@ -51,8 +51,8 @@ public class GainsPassword {
 			}
 			return diff == 0;
 		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+			return false;
 		}
-		return false;
 	}	
 
 	private static byte[] getSalt() throws NoSuchAlgorithmException {
